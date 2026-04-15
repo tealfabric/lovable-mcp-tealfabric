@@ -1,0 +1,9 @@
+{
+  "version": "0.1.3",
+  "plugins": [
+    {
+      "name": "tealfabric-mcp",
+      "path": "plugins/tealfabric-mcp"
+    }
+  ]
+}

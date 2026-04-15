@@ -127,6 +127,18 @@ Optional self-hosted **Streamable HTTP** (`MCP_TRANSPORT=http`) is documented in
 
 ---
 
+## Related projects
+
+Tealfabric ships the same MCP surface in three client-focused repositories:
+
+| Client | Repository |
+|--------|------------|
+| **Lovable** (this repo) | Lovable Desktop — you are here |
+| **Cursor** | [tealfabric/cursor-mcp-tealfabric](https://github.com/tealfabric/cursor-mcp-tealfabric) |
+| **Claude** | [tealfabric/claude-mcp-tealfabric](https://github.com/tealfabric/claude-mcp-tealfabric) |
+
+---
+
 ## Scripts
 
 | Script | Command |

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Lovable Desktop documentation** — Added [docs/LOVABLE.md](docs/LOVABLE.md) for local MCP install; [docs/FUTURE-HTTP.md](docs/FUTURE-HTTP.md) for optional HTTP transport.
 - **CI workflow** — GitHub Actions runs `npm ci` and `npm run check` on push/PR.
-- **Cursor config example** — Added [.cursor/mcp.json.example](.cursor/mcp.json.example) for optional Cursor users; [`.gitignore`](.gitignore) ignores `.cursor/mcp.json` and `node_modules/`.
+- **Example stdio MCP JSON** — Added [examples/mcp-stdio.example.json](examples/mcp-stdio.example.json); [`.gitignore`](.gitignore) ignores `mcp.local.json` and `node_modules/`.
 - **Lovable-ready transport mode** — Added Streamable HTTP runtime (`MCP_TRANSPORT=http`) for future remote MCP hosting.
 - **Request-scoped auth support** — Added `TEALFABRIC_AUTH_SOURCE` (`auto`/`env`/`request`) to support per-request credentials from MCP clients.
 - **Runtime validation/config** — Added centralized runtime config parsing with explicit defaults.
@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Documentation focus** — README and developer docs center on **Lovable Desktop** local MCP; Cursor and HTTP are secondary/future.
+- **Documentation focus** — README and developer docs center on **Lovable Desktop** local MCP; optional HTTP documented separately.
+- **Cursor-free docs and paths** — Removed Cursor-specific setup and links; added [examples/mcp-stdio.example.json](examples/mcp-stdio.example.json). Renamed `plugins/tealfabric-mcp/.cursor-plugin/` to `plugin-manifest/`; marketplace validator expects `plugin-marketplace/marketplace.json` at repo root (see [scripts/validate-template.mjs](scripts/validate-template.mjs)).
 - **Resilient API client** — Added timeout + retry behavior for transient Tealfabric API failures.
 - **Upload hardening** — Local file upload is now disabled by default and gated by `TEALFABRIC_ALLOW_LOCAL_FILE_UPLOAD=true`.
 - **Version consistency** — Server version now reads from runtime config (`MCP_SERVER_VERSION` / package version fallback).
@@ -35,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Marketplace packaging** — Added Cursor marketplace manifests, plugin scaffolding, and plugin-level MCP config
+- **Marketplace packaging** — Added plugin manifests, scaffolding, and plugin-level MCP config
 - **Skills** — Added low-token MCP usage skills for efficient integration create/update and schema-safe tool calling
 - **Validation and CI** — Added marketplace validation script and GitHub Actions workflow for build/validation checks
 - **Plugin docs** — Added plugin README with setup and quick verification steps
@@ -56,6 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Webapps** — List, get, create, update, and publish Tealfabric webapps
 - **Processes** — List processes, get process, list process steps, get process step, execute process
 - **Documents** — List, get metadata, upload, move, and delete documents (package files for delivery)
-- MCP server with stdio transport for Cursor IDE
+- MCP server with stdio transport for local MCP clients
 - API key authentication via `X-API-Key` header
 - Configurable base URL via `TEALFABRIC_API_URL` environment variable

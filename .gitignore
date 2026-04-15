@@ -1,5 +1,5 @@
 node_modules/
-.cursor/mcp.json
+mcp.local.json
 .env
 .env.local
 .DS_Store

@@ -2,7 +2,7 @@
   "mcpServers": {
     "tealfabric": {
       "command": "node",
-      "args": ["${workspaceFolder}/dist/index.js"],
+      "args": ["/ABSOLUTE/PATH/TO/lovable-mcp-tealfabric/dist/index.js"],
       "env": {
         "TEALFABRIC_API_KEY": "${input:tealfabric_api_key}",
         "TEALFABRIC_API_URL": "https://tealfabric.io"

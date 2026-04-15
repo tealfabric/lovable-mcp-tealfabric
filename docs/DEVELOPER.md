@@ -25,7 +25,7 @@ This document is for developers who want to use, configure, or extend the **Teal
 
 ## 1. Overview
 
-The Tealfabric MCP Server is an **MCP (Model Context Protocol) server** that runs locally (stdio) and talks to the Tealfabric REST API. The primary documented client for this repository is **Lovable Desktop** (local MCP); **Cursor** and other stdio MCP hosts are also supported.
+The Tealfabric MCP Server is an **MCP (Model Context Protocol) server** that runs locally (stdio) and talks to the Tealfabric REST API. The documented client for this repository is **Lovable Desktop** (local MCP). Other MCP clients that spawn a stdio process can use the same binary.
 
 It lets the AI assistant:
 
@@ -42,7 +42,7 @@ It lets the AI assistant:
 
 The server is **standalone**: it only depends on Node.js, npm packages (`@modelcontextprotocol/sdk`, `zod`), and the Tealfabric API. It does not depend on the Tealfabric codebase.
 
-- **Transports:** **stdio** (default; Lovable Desktop local MCP, Cursor, etc.) and optional **Streamable HTTP** (`/mcp`) for self-hosted remote use — see [FUTURE-HTTP.md](FUTURE-HTTP.md).
+- **Transports:** **stdio** (default; Lovable Desktop local MCP) and optional **Streamable HTTP** (`/mcp`) for self-hosted remote use — see [FUTURE-HTTP.md](FUTURE-HTTP.md).
 - **Authentication:** `TEALFABRIC_API_KEY` for typical local use; request-scoped token and/or env key when `TEALFABRIC_AUTH_SOURCE` is set — see environment table below.
 
 ---
@@ -53,19 +53,18 @@ The server is **standalone**: it only depends on Node.js, npm packages (`@modelc
 - **Tealfabric account** and an **API key**
   - Create keys in the Tealfabric UI (e.g. User settings → API Keys) or via `POST /api/v1/api-keys` when logged in.
 - For **Lovable Desktop**: macOS and the [Lovable Desktop app](https://docs.lovable.dev/integrations/desktop-app) (local MCP).
-- For **Cursor**: IDE with MCP support (typically Cursor v0.40+).
 
 ---
 
 ## 3. Installation and build
 
 ```bash
-cd mcp-server-tealfabric
+cd lovable-mcp-tealfabric
 npm install
 npm run build
 ```
 
-- **Output:** `dist/index.js` (and `dist/client.js`). Lovable Desktop, Cursor, or the shell runs `node dist/index.js` over stdio.
+- **Output:** `dist/index.js` (and `dist/client.js`). Lovable Desktop or the shell runs `node dist/index.js` over stdio.
 - **Scripts:**
   - `npm run build` — compile TypeScript
   - `npm run start` — run `node dist/index.js` (for manual testing)
@@ -82,33 +81,9 @@ Use **stdio** (default). Build the project, then register a **local MCP server**
 
 Full steps: **[LOVABLE.md](LOVABLE.md)**. Official reference: [Lovable Desktop — MCP servers](https://docs.lovable.dev/integrations/desktop-app).
 
-### Cursor
+### Other MCP hosts (stdio + JSON config)
 
-Add the MCP server in Cursor so the AI can call Tealfabric tools.
-
-**Option A — UI:** Cursor Settings → **Tools & MCP** → **Add new MCP server**
-
-**Option B — Config file:** Create or edit `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
-
-```json
-{
-  "mcpServers": {
-    "tealfabric": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/mcp-server-tealfabric/dist/index.js"],
-      "env": {
-        "TEALFABRIC_API_KEY": "YOUR_API_KEY",
-        "TEALFABRIC_API_URL": "https://tealfabric.io"
-      }
-    }
-  }
-}
-```
-
-- Replace `YOUR_API_KEY` with your Tealfabric API key.
-- Replace `/ABSOLUTE/PATH/TO/mcp-server-tealfabric/dist/index.js` with the real path to the built entrypoint.
-
-Then **restart Cursor** so it loads the server.
+If your tool uses a JSON file to register stdio servers, use **[examples/mcp-stdio.example.json](../examples/mcp-stdio.example.json)** as a template: set `command`, `args` (absolute path to `dist/index.js`), and `env` for `TEALFABRIC_API_KEY` / `TEALFABRIC_API_URL`. See **[examples/README.md](../examples/README.md)**.
 
 ### Optional: HTTP transport (future / self-hosted)
 
@@ -204,13 +179,13 @@ Full API and platform behaviour are documented at [https://tealfabric.io/docs](h
 | `MCP_HTTP_PORT` | No | `3000` | Port for HTTP transport. |
 | `MCP_SERVER_API_KEY` | No | — | Optional API key required by incoming HTTP requests. |
 
-Set these in **Lovable Desktop** local MCP server settings, **Cursor** MCP `env`, or in the shell when running `node dist/index.js` manually.
+Set these in **Lovable Desktop** local MCP server settings, your optional JSON config `env` block, or in the shell when running `node dist/index.js` manually.
 
 ---
 
 ## 8. Security and API keys
 
-- **Do not commit** real API keys. Prefer Lovable Desktop connector settings, Cursor’s MCP UI, or a local `mcp.json` that is gitignored.
+- **Do not commit** real API keys. Prefer Lovable Desktop connector settings or a local gitignored file (for example `mcp.local.json`; see repo `.gitignore`).
 - API keys are **tenant- and user-scoped** in Tealfabric; restrict scopes as the platform supports them.
 - The connector only uses **HTTPS** and does not log the key; it sends it only in the `X-API-Key` header to `TEALFABRIC_API_URL`.
 
@@ -219,7 +194,7 @@ Set these in **Lovable Desktop** local MCP server settings, **Cursor** MCP `env`
 ## 9. Project structure
 
 ```
-mcp-server-tealfabric/
+lovable-mcp-tealfabric/
 ├── package.json
 ├── tsconfig.json
 ├── README.md
@@ -227,6 +202,9 @@ mcp-server-tealfabric/
 │   ├── LOVABLE.md            # Lovable Desktop local MCP (users)
 │   ├── FUTURE-HTTP.md        # Optional remote HTTP transport
 │   └── DEVELOPER.md          # This file
+├── examples/
+│   ├── README.md             # Optional stdio JSON config notes
+│   └── mcp-stdio.example.json
 ├── src/
 │   ├── index.ts              # Entry: load config, build server, stdio or HTTP transport
 │   ├── config.ts             # Runtime env parsing
@@ -268,8 +246,8 @@ For new Tealfabric endpoints or capabilities, use [https://tealfabric.io/docs](h
 |-------|-------------------------------|
 | No Tealfabric API key / auth errors | Set `TEALFABRIC_API_KEY`, or use `TEALFABRIC_AUTH_SOURCE` + request Bearer/`x-api-key` as documented in `README.md`. |
 | 401 from Tealfabric | Key invalid or revoked. Create a new key in Tealfabric (User → API Keys). |
-| Tools not visible in Lovable / Cursor | Ensure `args` points to `dist/index.js`, env includes `TEALFABRIC_API_KEY`, and restart the app. Approve the local connector in Lovable Desktop if prompted. |
-| "Cannot find module" at runtime | Run `npm run build` and point Cursor to `dist/index.js`, not `src/index.ts`. |
+| Tools not visible in Lovable | Ensure `args` points to `dist/index.js`, env includes `TEALFABRIC_API_KEY`, and restart the app. Approve the local connector in Lovable Desktop if prompted. |
+| "Cannot find module" at runtime | Run `npm run build` and point the MCP `args` entry to `dist/index.js`, not `src/index.ts`. |
 | Wrong tenant or no data | API key is tied to a Tealfabric user/tenant; use a key for the correct account. |
 
 ---
@@ -281,4 +259,3 @@ For new Tealfabric endpoints or capabilities, use [https://tealfabric.io/docs](h
 - **Optional HTTP transport:** [docs/FUTURE-HTTP.md](FUTURE-HTTP.md)
 - **Tealfabric platform documentation:** [https://tealfabric.io/docs](https://tealfabric.io/docs) — quickstart, ProcessFlow, WebApps, integrations, connectors.
 - **MCP (Model Context Protocol):** [https://modelcontextprotocol.io](https://modelcontextprotocol.io) — protocol and concepts.
-- **Cursor MCP:** [Cursor docs on MCP](https://cursor.com/docs/cookbook/building-mcp-server) for connecting custom servers.

@@ -1,6 +1,6 @@
 # Tealfabric MCP — plugin bundle
 
-This folder contains assets for **Cursor** marketplace-style distribution (`mcp.json`, skills, rules). The **primary** documented install path for this repository is **Lovable Desktop** local MCP — see the repo root **[README.md](../../README.md)** and **[docs/LOVABLE.md](../../docs/LOVABLE.md)**.
+Optional **plugin bundle** (`mcp.json`, skills, rules, manifest under `plugin-manifest/`). The **supported** install path for this repository is **Lovable Desktop** local MCP — see the repo root **[README.md](../../README.md)** and **[docs/LOVABLE.md](../../docs/LOVABLE.md)**.
 
 ## What it provides
 
@@ -21,9 +21,9 @@ This folder contains assets for **Cursor** marketplace-style distribution (`mcp.
 
 Details: **[docs/LOVABLE.md](../../docs/LOVABLE.md)**.
 
-## Cursor (optional)
+## Plugin bundle (`mcp.json`)
 
-Use **`mcp.json`** in this folder as a template with `${workspaceFolder}` or an absolute path to `dist/index.js`, and set `TEALFABRIC_API_KEY` when prompted or via `env`.
+**`mcp.json`** in this folder is a template: set `args` to the absolute path of your built `dist/index.js` (replace the placeholder). Use **`inputs`** to prompt for `TEALFABRIC_API_KEY` if your host supports it.
 
 ## Required environment
 
@@ -34,8 +34,8 @@ Use **`mcp.json`** in this folder as a template with `${workspaceFolder}` or an 
 
 - `npm run build`
 - `npm run check` (build + tests)
-- `npm run validate:marketplace` (only if maintaining Cursor marketplace metadata at repo root)
+- `npm run validate:marketplace` (only if maintaining marketplace metadata at repo root)
 
 ## Future: HTTP transport
 
-Optional remote Streamable HTTP is documented in **[docs/FUTURE-HTTP.md](../../docs/FUTURE-HTTP.md)** — not required for Lovable Desktop or Cursor stdio.
+Optional remote Streamable HTTP is documented in **[docs/FUTURE-HTTP.md](../../docs/FUTURE-HTTP.md)** — not required for Lovable Desktop stdio.

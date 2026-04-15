@@ -10,5 +10,5 @@ Before marketplace publication:
 1. Run `npm run build`.
 2. Run `npm run validate:marketplace`.
 3. Confirm `CHANGELOG.md` has the target version section.
-4. Confirm plugin `version` matches release version in `plugins/tealfabric-mcp/.cursor-plugin/plugin.json`.
+4. Confirm plugin `version` matches release version in `plugins/tealfabric-mcp/plugin-manifest/plugin.json`.
 5. Confirm no secrets are committed.

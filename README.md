@@ -1,6 +1,6 @@
 # Tealfabric MCP Server (Lovable Desktop — local)
 
-[MCP](https://modelcontextprotocol.io) server that connects **[Lovable Desktop](https://docs.lovable.dev/integrations/desktop-app)** (and other MCP clients) to the **[Tealfabric](https://tealfabric.io)** platform: webapps, ProcessFlow, documents, connectors, and integrations.
+[MCP](https://modelcontextprotocol.io) server that connects **[Lovable Desktop](https://docs.lovable.dev/integrations/desktop-app)** to the **[Tealfabric](https://tealfabric.io)** platform: webapps, ProcessFlow, documents, connectors, and integrations.
 
 **Recommended setup:** run locally with **stdio** (default) and add the server under **Settings → Connectors → Local MCP servers** in Lovable Desktop. See **[docs/LOVABLE.md](docs/LOVABLE.md)** for step-by-step instructions.
 
@@ -26,7 +26,7 @@ npm run build
 
 ---
 
-## Lovable Desktop (primary)
+## Lovable Desktop
 
 Follow **[docs/LOVABLE.md](docs/LOVABLE.md)** for:
 
@@ -38,28 +38,9 @@ Official Lovable references: [Desktop app](https://docs.lovable.dev/integrations
 
 ---
 
-## Cursor & other editors (optional)
+## Optional: JSON config for other MCP hosts
 
-Any client that spawns a local MCP process over **stdio** can use the same binary.
-
-**Cursor:** Settings → **Tools & MCP** → Add server, or `.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "tealfabric": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/lovable-mcp-tealfabric/dist/index.js"],
-      "env": {
-        "TEALFABRIC_API_KEY": "YOUR_API_KEY_HERE",
-        "TEALFABRIC_API_URL": "https://tealfabric.io"
-      }
-    }
-  }
-}
-```
-
-Use your real path and API key; restart the editor after changes.
+If your environment uses a JSON file to register stdio MCP servers, see **[examples/mcp-stdio.example.json](examples/mcp-stdio.example.json)** and **[examples/README.md](examples/README.md)**. Lovable Desktop’s primary path remains the in-app **Local MCP servers** UI.
 
 ---
 
@@ -97,7 +78,7 @@ Use your real path and API key; restart the editor after changes.
 
 ## Environment variables
 
-### Local MCP (Lovable Desktop, Cursor, stdio)
+### Local MCP (Lovable Desktop, stdio)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -129,8 +110,7 @@ Optional self-hosted **Streamable HTTP** (`MCP_TRANSPORT=http`) is documented in
 
 ## Security
 
-- Do not commit real API keys. Keep secrets in Lovable’s connector settings, your shell profile, or a local gitignored config.
-- Copy [`.cursor/mcp.json.example`](.cursor/mcp.json.example) to `.cursor/mcp.json` for Cursor; `.cursor/mcp.json` is listed in [`.gitignore`](.gitignore) so keys are not committed by mistake.
+- Do not commit real API keys. Keep secrets in Lovable’s connector settings, your shell profile, or a local file that is gitignored (for example `mcp.local.json` — see [.gitignore](.gitignore)).
 - Tealfabric keys are scoped to your user/tenant; use least privilege where the platform allows.
 
 ---
@@ -142,6 +122,7 @@ Optional self-hosted **Streamable HTTP** (`MCP_TRANSPORT=http`) is documented in
 | **[docs/LOVABLE.md](docs/LOVABLE.md)** | Lovable Desktop local MCP (start here) |
 | [docs/DEVELOPER.md](docs/DEVELOPER.md) | Developers: structure, API mapping, extending |
 | [docs/FUTURE-HTTP.md](docs/FUTURE-HTTP.md) | Optional remote HTTP transport |
+| [examples/](examples/) | Optional stdio JSON config reference |
 | [Tealfabric platform](https://tealfabric.io/docs) | WebApps, ProcessFlow, APIs |
 
 ---

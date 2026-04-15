@@ -1,7 +1,7 @@
 {
   "name": "mcp-server-tealfabric",
   "version": "0.1.3",
-  "description": "MCP server for Tealfabric: Lovable Desktop local MCP (stdio); optional Cursor; HTTP optional",
+  "description": "MCP server for Tealfabric: Lovable Desktop local MCP (stdio); optional HTTP transport",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

@@ -30,9 +30,9 @@ function walk(dir) {
   return out;
 }
 
-const marketplacePath = join(root, ".cursor-plugin", "marketplace.json");
+const marketplacePath = join(root, "plugin-marketplace", "marketplace.json");
 if (!existsSync(marketplacePath)) {
-  fail("Missing .cursor-plugin/marketplace.json");
+  fail("Missing plugin-marketplace/marketplace.json");
 } else {
   const marketplace = readJson(marketplacePath);
   if (marketplace) {
@@ -53,7 +53,7 @@ if (!existsSync(marketplacePath)) {
           continue;
         }
 
-        const pluginJsonPath = join(pluginDir, ".cursor-plugin", "plugin.json");
+        const pluginJsonPath = join(pluginDir, "plugin-manifest", "plugin.json");
         if (!existsSync(pluginJsonPath)) {
           fail(`Missing plugin manifest: ${relative(root, pluginJsonPath)}`);
           continue;

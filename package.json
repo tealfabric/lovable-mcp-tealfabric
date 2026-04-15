@@ -1,0 +1,31 @@
+{
+  "name": "mcp-server-tealfabric",
+  "version": "0.1.3",
+  "description": "MCP server for Tealfabric: Lovable Desktop local MCP (stdio); optional Cursor; HTTP optional",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-server-tealfabric": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:http": "MCP_TRANSPORT=http node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "validate:marketplace": "node scripts/validate-template.mjs",
+    "test": "npm run build && node --test test/**/*.test.mjs",
+    "check": "npm run build && npm run test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

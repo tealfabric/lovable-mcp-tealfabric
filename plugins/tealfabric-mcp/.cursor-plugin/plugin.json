@@ -1,0 +1,12 @@
+{
+  "name": "tealfabric-mcp",
+  "displayName": "Tealfabric MCP",
+  "version": "0.1.3",
+  "description": "Local MCP for Lovable Desktop and Cursor: Tealfabric WebApps, Processes, Documents, Connectors, and Integrations.",
+  "author": "Tealfabric",
+  "repository": "https://github.com/tealfabric/cursor-mcp-tealfabric",
+  "logo": "assets/tealfabric-mcp-logo.svg",
+  "entrypoints": {
+    "mcpConfig": "mcp.json"
+  }
+}

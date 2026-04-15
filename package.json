@@ -14,7 +14,7 @@
     "dev": "tsc && node dist/index.js",
     "validate:marketplace": "node scripts/validate-template.mjs",
     "test": "npm run build && node --test test/**/*.test.mjs",
-    "check": "npm run build && npm run test"
+    "check": "npm run build && npm run test && npm run validate:marketplace"
   },
   "engines": {
     "node": ">=18"

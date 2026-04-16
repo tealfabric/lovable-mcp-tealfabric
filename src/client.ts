@@ -180,6 +180,18 @@ export interface TealfabricClient {
     success: boolean;
     data?: unknown;
   }>;
+  downloadDocument(params: { file_path: string; tenant_id?: string }): Promise<{
+    success: boolean;
+    data?:
+      | unknown
+      | {
+          file_path: string;
+          filename: string;
+          content_type: string;
+          content_base64: string;
+        };
+    error?: string;
+  }>;
   uploadDocument(params: {
     destination_path: string;
     file_path: string;
@@ -217,6 +229,26 @@ function jsonHeaders(apiKey: string): Record<string, string> {
 
 function apiKeyHeaders(apiKey: string): Record<string, string> {
   return { "X-API-Key": apiKey };
+}
+
+function parseFilenameFromContentDisposition(header: string | null): string | undefined {
+  if (!header) return undefined;
+
+  const utf8Match = header.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1].trim().replace(/^"(.*)"$/, "$1"));
+    } catch {
+      return utf8Match[1].trim().replace(/^"(.*)"$/, "$1");
+    }
+  }
+
+  const plainMatch = header.match(/filename=([^;]+)/i);
+  if (plainMatch?.[1]) {
+    return plainMatch[1].trim().replace(/^"(.*)"$/, "$1");
+  }
+
+  return undefined;
 }
 
 export function createTealfabricClient(options: TealfabricClientOptions): TealfabricClient {
@@ -581,6 +613,49 @@ export function createTealfabricClient(options: TealfabricClientOptions): Tealfa
         "GET",
         `/api/v1/documents?${q.toString()}`
       );
+    },
+
+    async downloadDocument(params: { file_path: string; tenant_id?: string }) {
+      const q = new URLSearchParams({ action: "download", file_path: params.file_path });
+      if (params.tenant_id) q.set("tenant_id", params.tenant_id);
+      const url = `${baseUrl}/api/v1/documents?${q.toString()}`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), options.requestTimeoutMs);
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers: apiKeyHeaders(options.apiKey),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Tealfabric API ${res.status}: ${text || res.statusText}`);
+        }
+
+        const contentType = (res.headers.get("content-type") || "").toLowerCase();
+        if (contentType.includes("application/json")) {
+          return (await res.json()) as { success: boolean; data?: unknown };
+        }
+
+        const buffer = Buffer.from(await res.arrayBuffer());
+        const filename =
+          parseFilenameFromContentDisposition(res.headers.get("content-disposition")) ||
+          basename(params.file_path);
+
+        return {
+          success: true,
+          data: {
+            file_path: params.file_path,
+            filename,
+            content_type: res.headers.get("content-type") || "application/octet-stream",
+            content_base64: buffer.toString("base64"),
+          },
+        };
+      } finally {
+        clearTimeout(timeout);
+      }
     },
 
     async uploadDocument(params: { destination_path: string; file_path: string; tenant_id?: string }) {

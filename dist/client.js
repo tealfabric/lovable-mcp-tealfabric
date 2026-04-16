@@ -20,6 +20,24 @@ function jsonHeaders(apiKey) {
 function apiKeyHeaders(apiKey) {
     return { "X-API-Key": apiKey };
 }
+function parseFilenameFromContentDisposition(header) {
+    if (!header)
+        return undefined;
+    const utf8Match = header.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+        try {
+            return decodeURIComponent(utf8Match[1].trim().replace(/^"(.*)"$/, "$1"));
+        }
+        catch {
+            return utf8Match[1].trim().replace(/^"(.*)"$/, "$1");
+        }
+    }
+    const plainMatch = header.match(/filename=([^;]+)/i);
+    if (plainMatch?.[1]) {
+        return plainMatch[1].trim().replace(/^"(.*)"$/, "$1");
+    }
+    return undefined;
+}
 export function createTealfabricClient(options) {
     const baseUrl = options.baseUrl.replace(/\/$/, "");
     async function request(method, path, body) {
@@ -182,6 +200,44 @@ export function createTealfabricClient(options) {
             if (params.tenant_id)
                 q.set("tenant_id", params.tenant_id);
             return request("GET", `/api/v1/documents?${q.toString()}`);
+        },
+        async downloadDocument(params) {
+            const q = new URLSearchParams({ action: "download", file_path: params.file_path });
+            if (params.tenant_id)
+                q.set("tenant_id", params.tenant_id);
+            const url = `${baseUrl}/api/v1/documents?${q.toString()}`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), options.requestTimeoutMs);
+            try {
+                const res = await fetch(url, {
+                    method: "GET",
+                    headers: apiKeyHeaders(options.apiKey),
+                    signal: controller.signal,
+                });
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Tealfabric API ${res.status}: ${text || res.statusText}`);
+                }
+                const contentType = (res.headers.get("content-type") || "").toLowerCase();
+                if (contentType.includes("application/json")) {
+                    return (await res.json());
+                }
+                const buffer = Buffer.from(await res.arrayBuffer());
+                const filename = parseFilenameFromContentDisposition(res.headers.get("content-disposition")) ||
+                    basename(params.file_path);
+                return {
+                    success: true,
+                    data: {
+                        file_path: params.file_path,
+                        filename,
+                        content_type: res.headers.get("content-type") || "application/octet-stream",
+                        content_base64: buffer.toString("base64"),
+                    },
+                };
+            }
+            finally {
+                clearTimeout(timeout);
+            }
         },
         async uploadDocument(params) {
             if (!options.allowLocalFileUpload) {

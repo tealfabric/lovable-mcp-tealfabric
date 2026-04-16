@@ -91,6 +91,8 @@ Call tealfabric_list_webapps with an empty object or reasonable limit.
 
 If tools are missing, see [Troubleshooting](#troubleshooting).
 
+For document retrieval, use `tealfabric_download_document` (returns base64 for binary-safe MCP transport) and `tealfabric_get_document_metadata` for metadata-only checks.
+
 ---
 
 ## 4. Security notes

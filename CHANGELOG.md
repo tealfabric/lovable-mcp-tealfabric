@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Request-scoped auth support** — Added `TEALFABRIC_AUTH_SOURCE` (`auto`/`env`/`request`) to support per-request credentials from MCP clients.
 - **Runtime validation/config** — Added centralized runtime config parsing with explicit defaults.
 - **Basic automated tests** — Added Node test suite for config/auth resolution behavior.
+- **Document download tool** — Added `tealfabric_download_document` for `/api/v1/documents?action=download`, returning base64 content for binary-safe MCP transport.
 
 ### Changed
 

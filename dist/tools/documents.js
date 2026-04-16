@@ -14,6 +14,13 @@ export function registerDocumentTools(server, run) {
             tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
         }),
     }, async ({ file_path, tenant_id }, extra) => run(extra, (client) => client.getDocumentMetadata({ file_path, tenant_id })));
+    server.registerTool("tealfabric_download_document", {
+        description: "Download a document/file from Tealfabric documents storage. Binary files are returned as base64 for safe MCP transport.",
+        inputSchema: z.object({
+            file_path: z.string().describe("Full path to the file (e.g. packages/report-v1.zip)"),
+            tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        }),
+    }, async ({ file_path, tenant_id }, extra) => run(extra, (client) => client.downloadDocument({ file_path, tenant_id })));
     server.registerTool("tealfabric_upload_document", {
         description: "Upload a file to Tealfabric documents storage. Use to publish built package files for delivery. The file is stored in destination_path using the uploaded file's name.",
         inputSchema: z.object({

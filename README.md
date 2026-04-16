@@ -70,6 +70,7 @@ If your environment uses a JSON file to register stdio MCP servers, see **[examp
 | `tealfabric_update_process_step` | Update an existing process step |
 | `tealfabric_list_documents` | List documents in a directory |
 | `tealfabric_get_document_metadata` | Get file metadata |
+| `tealfabric_download_document` | Download a file; returns base64 for binary-safe transport |
 | `tealfabric_upload_document` | Upload a file (e.g. built package); requires `TEALFABRIC_ALLOW_LOCAL_FILE_UPLOAD=true` |
 | `tealfabric_move_document` | Move or rename file/directory |
 | `tealfabric_delete_document` | Delete file or directory |

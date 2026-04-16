@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Version consistency** — Server version now reads from runtime config (`MCP_SERVER_VERSION` / package version fallback).
 - **Tool module layout** — MCP tools are split into `src/tools/` by domain (`connectors`, `integrations`, `webapps`, `processes`, `documents`) with shared `registerTealfabricTools` and response helpers.
 
+## [0.1.4] - Released
+
+### Fixed
+
+- **Process execution payload mapping** — Updated `POST /api/v1/processflow?action=execute-process` request body to send `input_data` (instead of `input`) so MCP input reaches Tealfabric ProcessFlow correctly.
+
 ## [0.1.3] - Released
 
 ### Fixed

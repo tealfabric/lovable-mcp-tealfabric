@@ -154,7 +154,7 @@ export function createTealfabricClient(options) {
             return request("GET", `/api/v1/processflow?action=step&step_id=${encodeURIComponent(stepId)}`);
         },
         async executeProcess(processId, input) {
-            return request("POST", "/api/v1/processflow?action=execute-process", { process_id: processId, input: input ?? {} });
+            return request("POST", "/api/v1/processflow?action=execute-process", { process_id: processId, input_data: input ?? {} });
         },
         async createProcess(body) {
             return request("POST", "/api/v1/processes?action=create", body);

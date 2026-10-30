@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { tenantIdIgnored } from "./schemas.js";
 import type { ToolRunner } from "./types.js";
 
 export function registerDocumentTools(server: McpServer, run: ToolRunner): void {
@@ -10,10 +11,23 @@ export function registerDocumentTools(server: McpServer, run: ToolRunner): void 
         "List documents/files in a Tealfabric documents directory. Use for browsing package files.",
       inputSchema: z.object({
         path: z.string().optional().describe("Directory path (e.g. packages/, or root if omitted)"),
-        tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        tenant_id: tenantIdIgnored,
       }),
     },
     async ({ path, tenant_id }, extra) => run(extra, (client) => client.listDocuments({ path, tenant_id }))
+  );
+
+  server.registerTool(
+    "tealfabric_list_document_tree",
+    {
+      description: "List a Tealfabric documents directory as a tree (action=tree).",
+      inputSchema: z.object({
+        path: z.string().optional().describe("Directory path"),
+        max_depth: z.number().int().min(1).max(8).optional().describe("Tree depth (1–8, default 3)"),
+        tenant_id: tenantIdIgnored,
+      }),
+    },
+    async (args, extra) => run(extra, (client) => client.listDocumentTree(args))
   );
 
   server.registerTool(
@@ -22,11 +36,39 @@ export function registerDocumentTools(server: McpServer, run: ToolRunner): void 
       description: "Get metadata for a document/file in Tealfabric documents storage.",
       inputSchema: z.object({
         file_path: z.string().describe("Full path to the file (e.g. packages/report-v1.zip)"),
-        tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        tenant_id: tenantIdIgnored,
       }),
     },
     async ({ file_path, tenant_id }, extra) =>
       run(extra, (client) => client.getDocumentMetadata({ file_path, tenant_id }))
+  );
+
+  server.registerTool(
+    "tealfabric_read_document_text",
+    {
+      description: "Read a UTF-8 text document from Tealfabric documents storage (action=read-text).",
+      inputSchema: z.object({
+        file_path: z.string().describe("Full path to the text file"),
+        tenant_id: tenantIdIgnored,
+      }),
+    },
+    async ({ file_path, tenant_id }, extra) =>
+      run(extra, (client) => client.readDocumentText({ file_path, tenant_id }))
+  );
+
+  server.registerTool(
+    "tealfabric_write_document_text",
+    {
+      description:
+        "Write UTF-8 text to a Tealfabric documents path (action=write-text; creates a backup).",
+      inputSchema: z.object({
+        file_path: z.string().describe("Full path to the file to write"),
+        content: z.string().describe("UTF-8 text content"),
+        encoding: z.string().optional().describe("Must be utf8 / utf-8 when provided"),
+        tenant_id: tenantIdIgnored,
+      }),
+    },
+    async (args, extra) => run(extra, (client) => client.writeDocumentText(args))
   );
 
   server.registerTool(
@@ -36,7 +78,7 @@ export function registerDocumentTools(server: McpServer, run: ToolRunner): void 
         "Download a document/file from Tealfabric documents storage. Binary files are returned as base64 for safe MCP transport.",
       inputSchema: z.object({
         file_path: z.string().describe("Full path to the file (e.g. packages/report-v1.zip)"),
-        tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        tenant_id: tenantIdIgnored,
       }),
     },
     async ({ file_path, tenant_id }, extra) =>
@@ -57,7 +99,7 @@ export function registerDocumentTools(server: McpServer, run: ToolRunner): void 
         file_path: z
           .string()
           .describe("Local filesystem path to the file to upload (e.g. ./dist/package.zip)"),
-        tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        tenant_id: tenantIdIgnored,
       }),
     },
     async ({ destination_path, file_path, tenant_id }, extra) =>
@@ -72,7 +114,7 @@ export function registerDocumentTools(server: McpServer, run: ToolRunner): void 
       inputSchema: z.object({
         old_path: z.string().describe("Current path of the file or directory"),
         new_path: z.string().describe("Destination path"),
-        tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        tenant_id: tenantIdIgnored,
       }),
     },
     async ({ old_path, new_path, tenant_id }, extra) =>
@@ -85,7 +127,7 @@ export function registerDocumentTools(server: McpServer, run: ToolRunner): void 
       description: "Delete a file or directory from Tealfabric documents storage.",
       inputSchema: z.object({
         path: z.string().describe("Path to the file or directory to delete"),
-        tenant_id: z.string().optional().describe("Tenant ID (defaults to authenticated tenant)"),
+        tenant_id: tenantIdIgnored,
       }),
     },
     async ({ path, tenant_id }, extra) => run(extra, (client) => client.deleteDocument({ path, tenant_id }))

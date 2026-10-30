@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { objectRecord } from "./schemas.js";
 import type { ToolRunner } from "./types.js";
 
 export function registerConnectorTools(server: McpServer, run: ToolRunner): void {
@@ -19,14 +20,16 @@ export function registerConnectorTools(server: McpServer, run: ToolRunner): void
   server.registerTool(
     "tealfabric_test_connector",
     {
-      description: "Test a connector configuration payload against the Tealfabric connectors test endpoint.",
+      description: "Test a connector configuration against the Tealfabric connectors test endpoint.",
       inputSchema: z.object({
-        payload: z
-          .record(z.unknown())
-          .describe("Connector configuration payload expected by the selected connector"),
+        connector_id: z.string().describe("Connector ID"),
+        configuration: objectRecord
+          .optional()
+          .describe("Connector configuration object expected by the selected connector"),
       }),
     },
-    async ({ payload }, extra) => run(extra, (client) => client.testConnector(payload))
+    async ({ connector_id, configuration }, extra) =>
+      run(extra, (client) => client.testConnector({ connector_id, configuration }))
   );
 
   server.registerTool(

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { objectRecord, processStatusEnum, stepLanguageEnum } from "./schemas.js";
 export function registerProcessTools(server, run) {
     server.registerTool("tealfabric_list_processes", {
         description: "List Tealfabric ProcessFlow processes for the authenticated tenant.",
@@ -20,7 +21,7 @@ export function registerProcessTools(server, run) {
         description: "Execute a Tealfabric process with optional input.",
         inputSchema: z.object({
             process_id: z.string().describe("Process ID"),
-            input: z.record(z.unknown()).optional().describe("Process input payload"),
+            input: objectRecord.optional().describe("Process input payload"),
         }),
     }, async ({ process_id, input }, extra) => run(extra, (client) => client.executeProcess(process_id, input)));
     server.registerTool("tealfabric_create_process", {
@@ -29,15 +30,12 @@ export function registerProcessTools(server, run) {
             name: z.string().describe("Process name"),
             description: z.string().optional(),
             type: z.string().optional(),
-            status: z.enum(["draft", "active", "inactive", "archived"]).optional().default("draft"),
-            version: z.string().optional(),
+            status: processStatusEnum.optional().default("draft"),
             category: z.string().optional(),
-            tags: z.array(z.string()).optional(),
-            configuration: z.record(z.unknown()).optional(),
+            configuration: objectRecord.optional(),
             is_template: z.boolean().optional(),
-            template_id: z.string().optional(),
-            estimated_duration: z.number().optional(),
             priority: z.string().optional(),
+            executable_by_ai_agents: z.boolean().optional(),
         }),
     }, async (args, extra) => run(extra, (client) => client.createProcess(args)));
     server.registerTool("tealfabric_update_process", {
@@ -47,55 +45,75 @@ export function registerProcessTools(server, run) {
             name: z.string().optional(),
             description: z.string().optional(),
             type: z.string().optional(),
-            status: z.enum(["draft", "active", "inactive", "archived"]).optional(),
-            version: z.string().optional(),
+            status: processStatusEnum.optional(),
             category: z.string().optional(),
-            tags: z.array(z.string()).optional(),
-            configuration: z.record(z.unknown()).optional(),
+            configuration: objectRecord.optional(),
             is_template: z.boolean().optional(),
-            template_id: z.string().optional(),
-            estimated_duration: z.number().optional(),
             priority: z.string().optional(),
+            executable_by_ai_agents: z.boolean().optional(),
         }),
     }, async ({ process_id, ...body }, extra) => run(extra, (client) => client.updateProcess(process_id, body)));
+    server.registerTool("tealfabric_delete_process", {
+        description: "Hard-delete a Tealfabric process by ID.",
+        inputSchema: z.object({
+            process_id: z.string().describe("Process ID"),
+        }),
+    }, async ({ process_id }, extra) => run(extra, (client) => client.deleteProcess(process_id)));
+    server.registerTool("tealfabric_retire_process", {
+        description: "Soft-retire a process (sets status inactive and prefixes name with <retired>). Prefer this over hard delete when preserving history.",
+        inputSchema: z.object({
+            process_id: z.string().describe("Process ID"),
+        }),
+    }, async ({ process_id }, extra) => run(extra, (client) => client.retireProcess(process_id)));
     server.registerTool("tealfabric_create_process_step", {
         description: "Create a new process step in a process flow. Returns the new step_id.",
         inputSchema: z.object({
             process_id: z.string().describe("Process ID to add the step to"),
-            step_name: z.string().describe("Step name"),
-            name: z.string().optional().describe("Alias for step_name"),
+            name: z.string().optional().describe("Step name (preferred)"),
+            step_name: z.string().optional().describe("Alias for name"),
             step_type: z.string().optional().default("action"),
             description: z.string().optional(),
             code_snippet: z.string().optional(),
             sequence: z.number().optional(),
-            position_x: z.number().optional(),
-            position_y: z.number().optional(),
-            estimated_duration: z.number().optional(),
-            assigned_user_id: z.string().optional(),
-            step_status: z.string().optional(),
-            input_schema: z.record(z.unknown()).optional(),
-            output_schema: z.record(z.unknown()).optional(),
-            configuration: z.record(z.unknown()).optional(),
+            sequence_order: z.number().optional(),
+            input_schema: objectRecord.optional(),
+            output_schema: objectRecord.optional(),
+            configuration: objectRecord.optional(),
+            language: stepLanguageEnum.optional(),
+            execution_timeout: z.number().optional().describe("Execution timeout in seconds"),
         }),
-    }, async (args, extra) => run(extra, (client) => client.createProcessStep(args)));
+    }, async (args, extra) => {
+        if (!args.name && !args.step_name) {
+            return {
+                content: [{ type: "text", text: "Error: name or step_name is required" }],
+            };
+        }
+        return run(extra, (client) => client.createProcessStep(args));
+    });
     server.registerTool("tealfabric_update_process_step", {
         description: "Update an existing process step in a process flow.",
         inputSchema: z.object({
             step_id: z.string().describe("Step ID"),
-            step_name: z.string().optional(),
-            name: z.string().optional().describe("Alias for step_name"),
+            name: z.string().optional().describe("Step name (preferred)"),
+            step_name: z.string().optional().describe("Alias for name"),
             step_type: z.string().optional(),
             description: z.string().optional(),
             code_snippet: z.string().optional(),
             sequence: z.number().optional(),
+            sequence_order: z.number().optional(),
             position_x: z.number().optional(),
             position_y: z.number().optional(),
-            estimated_duration: z.number().optional(),
-            assigned_user_id: z.string().optional(),
-            step_status: z.string().optional(),
-            input_schema: z.record(z.unknown()).optional(),
-            output_schema: z.record(z.unknown()).optional(),
-            configuration: z.record(z.unknown()).optional(),
+            input_schema: objectRecord.optional(),
+            output_schema: objectRecord.optional(),
+            configuration: objectRecord.optional(),
+            language: stepLanguageEnum.optional(),
+            execution_timeout: z.number().optional().describe("Execution timeout in seconds"),
         }),
     }, async ({ step_id, ...body }, extra) => run(extra, (client) => client.updateProcessStep(step_id, body)));
+    server.registerTool("tealfabric_delete_process_step", {
+        description: "Delete a process step by step_id.",
+        inputSchema: z.object({
+            step_id: z.string().describe("Step ID"),
+        }),
+    }, async ({ step_id }, extra) => run(extra, (client) => client.deleteProcessStep(step_id)));
 }

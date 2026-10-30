@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { objectRecord } from "./schemas.js";
 export function registerConnectorTools(server, run) {
     server.registerTool("tealfabric_list_connectors", {
         description: "List Tealfabric connectors, get a specific connector, or fetch connector parameters.",
@@ -8,13 +9,14 @@ export function registerConnectorTools(server, run) {
         }),
     }, async ({ action, connector_id }, extra) => run(extra, (client) => client.listConnectors({ action, connector_id })));
     server.registerTool("tealfabric_test_connector", {
-        description: "Test a connector configuration payload against the Tealfabric connectors test endpoint.",
+        description: "Test a connector configuration against the Tealfabric connectors test endpoint.",
         inputSchema: z.object({
-            payload: z
-                .record(z.unknown())
-                .describe("Connector configuration payload expected by the selected connector"),
+            connector_id: z.string().describe("Connector ID"),
+            configuration: objectRecord
+                .optional()
+                .describe("Connector configuration object expected by the selected connector"),
         }),
-    }, async ({ payload }, extra) => run(extra, (client) => client.testConnector(payload)));
+    }, async ({ connector_id, configuration }, extra) => run(extra, (client) => client.testConnector({ connector_id, configuration })));
     server.registerTool("tealfabric_get_connector_oauth2_required", {
         description: "Check whether a connector requires OAuth2 authentication.",
         inputSchema: z.object({

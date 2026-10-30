@@ -1,3 +1,8 @@
+/**
+ * Tealfabric API client for the MCP server.
+ * Factory client with retries/timeouts for Lovable Desktop (stdio/HTTP).
+ * Aligned with backend-next REST contracts (webapps, integrations, processflow, documents).
+ */
 import { readFile } from "fs/promises";
 import { basename } from "path";
 const retryableStatusCodes = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
@@ -86,7 +91,7 @@ export function createTealfabricClient(options) {
         }
         throw lastError instanceof Error ? lastError : new Error("Unknown Tealfabric request error");
     }
-    return {
+    const client = {
         // --- Connectors ---
         async listConnectors(params) {
             const q = new URLSearchParams();
@@ -96,8 +101,13 @@ export function createTealfabricClient(options) {
                 q.set("connector_id", params.connector_id);
             return request("GET", `/api/v1/connectors${q.toString() ? `?${q.toString()}` : ""}`);
         },
-        async testConnector(body) {
-            return request("POST", "/api/v1/connectors?action=test", body);
+        async testConnector(params) {
+            return request("POST", "/api/v1/connectors?action=test", {
+                connector_id: params.connector_id,
+                ...(params.configuration !== undefined
+                    ? { configuration: params.configuration }
+                    : {}),
+            });
         },
         async getConnectorOAuth2Required(connectorId) {
             return request("GET", `/api/v1/connectors/${encodeURIComponent(connectorId)}/oauth2-required`);
@@ -137,12 +147,35 @@ export function createTealfabricClient(options) {
         async updateIntegration(integrationId, body) {
             return request("PUT", "/api/v1/integrations?action=update", { integration_id: integrationId, ...body });
         },
+        async executeIntegration(params) {
+            return request("POST", "/api/v1/integrations?action=execute", {
+                integration_id: params.integration_id,
+                ...(params.data !== undefined ? { data: params.data } : {}),
+                ...(params.async !== undefined ? { async: params.async } : {}),
+            });
+        },
+        async deleteIntegration(integrationId) {
+            return request("DELETE", "/api/v1/integrations?action=delete", { integration_id: integrationId });
+        },
+        // --- Webapps ---
         async listWebapps(params) {
             const q = new URLSearchParams();
             if (params?.search)
                 q.set("search", params.search);
-            if (params?.limit)
-                q.set("limit", String(params.limit));
+            if (params?.page != null)
+                q.set("page", String(params.page));
+            if (params?.items_per_page != null)
+                q.set("items_per_page", String(params.items_per_page));
+            if (params?.type)
+                q.set("type", params.type);
+            if (params?.published_only != null)
+                q.set("published_only", params.published_only ? "1" : "0");
+            if (params?.process_id)
+                q.set("process_id", params.process_id);
+            if (params?.sort_by)
+                q.set("sort_by", params.sort_by);
+            if (params?.sort_direction)
+                q.set("sort_direction", params.sort_direction);
             const query = q.toString();
             return request("GET", `/api/v1/webapps${query ? `?${query}` : ""}`);
         },
@@ -156,9 +189,19 @@ export function createTealfabricClient(options) {
         async updateWebapp(webappId, body) {
             return request("PUT", `/api/v1/webapps/${encodeURIComponent(webappId)}`, body);
         },
-        async publishWebapp(webappId) {
-            return request("POST", `/api/v1/webapps/${encodeURIComponent(webappId)}/publish`, {});
+        async publishWebapp(webappId, version) {
+            return request("POST", `/api/v1/webapps/${encodeURIComponent(webappId)}/publish`, { version });
         },
+        async unpublishWebapp(webappId) {
+            return request("POST", `/api/v1/webapps/${encodeURIComponent(webappId)}/unpublish`, {});
+        },
+        async createWebappVersion(webappId) {
+            return request("POST", `/api/v1/webapps/${encodeURIComponent(webappId)}/version`, {});
+        },
+        async deleteWebapp(webappId) {
+            return request("DELETE", `/api/v1/webapps/${encodeURIComponent(webappId)}`);
+        },
+        // --- Processes ---
         async listProcesses() {
             return request("GET", "/api/v1/processflow?action=processes");
         },
@@ -180,17 +223,66 @@ export function createTealfabricClient(options) {
         async updateProcess(processId, body) {
             return request("PUT", "/api/v1/processes?action=update", { process_id: processId, ...body });
         },
+        async deleteProcess(processId) {
+            return request("DELETE", "/api/v1/processes?action=delete", { process_id: processId });
+        },
+        /**
+         * Soft-retire a process (mirrors ProcessflowService.retireProcess).
+         * No tenant REST retire route exists; implemented via get + update.
+         */
+        async retireProcess(processId) {
+            const got = await client.getProcess(processId);
+            const process = got.process ??
+                got.data ??
+                got;
+            const currentName = String(process?.name ?? "").trim();
+            if (!currentName && !got.success) {
+                throw new Error(`Tealfabric API: process not found (${processId})`);
+            }
+            const retiredName = currentName.startsWith("<retired>")
+                ? currentName
+                : `<retired> ${currentName || processId}`;
+            return client.updateProcess(processId, {
+                name: retiredName,
+                status: "inactive",
+            });
+        },
         async createProcessStep(body) {
-            return request("POST", "/api/v1/processes?action=create-step", body);
+            const { name, step_name, ...rest } = body;
+            const resolvedName = name ?? step_name;
+            return request("POST", "/api/v1/processes?action=create-step", {
+                ...rest,
+                ...(resolvedName !== undefined ? { name: resolvedName, step_name: resolvedName } : {}),
+            });
         },
         async updateProcessStep(stepId, body) {
-            return request("PUT", "/api/v1/processes?action=update-step", { step_id: stepId, ...body });
+            const { name, step_name, ...rest } = body;
+            const resolvedName = name ?? step_name;
+            return request("PUT", "/api/v1/processes?action=update-step", {
+                step_id: stepId,
+                ...rest,
+                ...(resolvedName !== undefined ? { name: resolvedName, step_name: resolvedName } : {}),
+            });
         },
-        // --- Documents (package files for delivery) ---
+        async deleteProcessStep(stepId) {
+            return request("DELETE", "/api/v1/processes?action=delete-step", { step_id: stepId });
+        },
+        // --- Documents ---
+        // Note: tenant_id query params are ignored by the API (auth tenant wins).
         async listDocuments(params) {
             const q = new URLSearchParams({ action: "list" });
             if (params?.path)
                 q.set("path", params.path);
+            if (params?.tenant_id)
+                q.set("tenant_id", params.tenant_id);
+            return request("GET", `/api/v1/documents?${q.toString()}`);
+        },
+        async listDocumentTree(params) {
+            const q = new URLSearchParams({ action: "tree" });
+            if (params?.path)
+                q.set("path", params.path);
+            if (params?.max_depth != null)
+                q.set("max_depth", String(params.max_depth));
             if (params?.tenant_id)
                 q.set("tenant_id", params.tenant_id);
             return request("GET", `/api/v1/documents?${q.toString()}`);
@@ -201,11 +293,27 @@ export function createTealfabricClient(options) {
                 q.set("tenant_id", params.tenant_id);
             return request("GET", `/api/v1/documents?${q.toString()}`);
         },
-        async downloadDocument(params) {
-            const q = new URLSearchParams({ action: "download", file_path: params.file_path });
+        async readDocumentText(params) {
+            const q = new URLSearchParams({ action: "read-text", file_path: params.file_path });
             if (params.tenant_id)
                 q.set("tenant_id", params.tenant_id);
-            const url = `${baseUrl}/api/v1/documents?${q.toString()}`;
+            return request("GET", `/api/v1/documents?${q.toString()}`);
+        },
+        async writeDocumentText(params) {
+            const q = new URLSearchParams({ action: "write-text" });
+            if (params.tenant_id)
+                q.set("tenant_id", params.tenant_id);
+            return request("PUT", `/api/v1/documents?${q.toString()}`, {
+                file_path: params.file_path,
+                content: params.content,
+                ...(params.encoding !== undefined ? { encoding: params.encoding } : {}),
+            });
+        },
+        async downloadDocument(params) {
+            const q = new URLSearchParams({ file_path: params.file_path });
+            if (params.tenant_id)
+                q.set("tenant_id", params.tenant_id);
+            const url = `${baseUrl}/api/v1/documents/download?${q.toString()}`;
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), options.requestTimeoutMs);
             try {
@@ -291,4 +399,5 @@ export function createTealfabricClient(options) {
             return request("DELETE", `/api/v1/documents?${q.toString()}`);
         },
     };
+    return client;
 }

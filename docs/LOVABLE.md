@@ -2,6 +2,8 @@
 
 This guide is the **recommended setup** for using the Tealfabric MCP server with **[Lovable Desktop](https://docs.lovable.dev/integrations/desktop-app)**. The server runs **on your Mac** as a local Node.js process and talks to the Tealfabric API using your API key.
 
+**Current package version: 0.2.0** (backend-next aligned). If you are upgrading from 0.1.x, see [RELEASE_NOTES_0.2.0.md](RELEASE_NOTES_0.2.0.md) and [MIGRATING.md](MIGRATING.md) before updating prompts that call publish/create-webapp/list-webapps/test-connector.
+
 For Lovable’s general MCP and connector model, see [Personal connectors (MCP servers)](https://docs.lovable.dev/integrations/mcp-servers). **Local MCP servers** (command + args) are documented under the [Lovable desktop app](https://docs.lovable.dev/integrations/desktop-app) page.
 
 ---

@@ -13,7 +13,7 @@
     "start:http": "MCP_TRANSPORT=http node dist/index.js",
     "dev": "tsc && node dist/index.js",
     "validate:marketplace": "node scripts/validate-template.mjs",
-    "test": "npm run build && node --test test/**/*.test.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
     "check": "npm run build && npm run test && npm run validate:marketplace"
   },
   "engines": {
